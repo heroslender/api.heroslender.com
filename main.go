@@ -2,22 +2,22 @@ package main
 
 import (
 	formatter "github.com/antonfisher/nested-logrus-formatter"
+	"github.com/heroslender/api.heroslender.com/env"
 	"github.com/heroslender/api.heroslender.com/updater/github"
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 )
+
+func init() {
+	logrus.Info("Main")
+}
 
 func main() {
 	setupLogrus()
 
-	logrus.Info("Loading .env file")
-	err := godotenv.Load()
-	if err != nil {
-		logrus.Error("Error loading .env file")
-	}
+	env.Init()
 
-	logrus.Info("Fetching github user Heroslender")
-	user, err := github.GetUserInfo("Heroslender")
+	logrus.Info("Fetching github user " + env.GithubUser)
+	user, err := github.GetUserInfo(env.GithubUser)
 	if err != nil {
 		logrus.Error(err)
 	}

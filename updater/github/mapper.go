@@ -7,8 +7,8 @@ import (
 func mapUserInfo(userInfo *GithubUser) *types.User {
 	repos := make([]types.Repository, len(userInfo.ItemShowcase.Items.Nodes))
 
-	for _, repo := range userInfo.ItemShowcase.Items.Nodes {
-		repos = append(repos, types.Repository{
+	for i, repo := range userInfo.ItemShowcase.Items.Nodes {
+		repos[i] = types.Repository{
 			Name:        repo.Name,
 			Displayname: repo.Displayname,
 			Description: repo.Description,
@@ -19,7 +19,7 @@ func mapUserInfo(userInfo *GithubUser) *types.User {
 				Name:  repo.Language.Name,
 				Color: repo.Language.Color,
 			},
-		})
+		}
 	}
 
 	return &types.User{

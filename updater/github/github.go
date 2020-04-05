@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/heroslender/api.heroslender.com/env"
 	"github.com/heroslender/api.heroslender.com/types"
 	"github.com/heroslender/api.heroslender.com/updater/utils"
 )
@@ -14,8 +14,6 @@ import (
 var client = http.Client{
 	Timeout: time.Duration(5 * time.Second),
 }
-
-var githubAPIKey = os.Getenv("GITHUB_API_KEY")
 
 // GetUserInfo fetches the user info from the github graphql api
 func GetUserInfo(user string) (*types.User, error) {
@@ -79,7 +77,7 @@ func fetchGithub(query string, result interface{}) error {
 		return err
 	}
 
-	req.Header.Set("Authorization", "bearer "+os.Getenv("GITHUB_API_KEY"))
+	req.Header.Set("Authorization", "bearer "+env.GithubAPIKey)
 
 	resp, err := client.Do(req)
 	if err != nil {

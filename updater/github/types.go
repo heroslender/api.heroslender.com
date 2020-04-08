@@ -34,3 +34,9 @@ type GithubRepository struct {
 		Color string `json:"color"`
 	} `json:"primaryLanguage"`
 }
+
+type GithubRepositoryReleases struct {
+	Name      string
+	Version   string
+	Downloads int
+}

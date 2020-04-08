@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/heroslender/api.heroslender.com/env"
@@ -13,6 +14,79 @@ import (
 
 var client = http.Client{
 	Timeout: time.Duration(5 * time.Second),
+}
+
+// GetPluginsInfo fetches the plugins releases info from the github graphql api
+func GetPluginsInfo(user string, repos []string) (*[]GithubRepositoryReleases, error) {
+	var reposStruct struct {
+		Data map[string]struct {
+			Name     string `json:"name"`
+			Releases struct {
+				Nodes []struct {
+					TagName string `json:"tagName"`
+					Assets  struct {
+						Nodes []struct {
+							Downloads int `json:"downloadCount"`
+						}
+					} `json:"releaseAssets"`
+				} `json:"nodes"`
+			} `json:"releases"`
+		} `json:"data"`
+	}
+
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("query {")
+	for _, repo := range repos {
+		queryBuilder.WriteString(repo)
+		queryBuilder.WriteString(":repository(name:\"")
+		queryBuilder.WriteString(repo)
+		queryBuilder.WriteString("\", owner:\"")
+		queryBuilder.WriteString(user)
+		queryBuilder.WriteString(`") {
+		  name,
+		  releases(first:100) {
+			nodes {
+			  tagName
+			  releaseAssets(first:1) {
+				nodes {
+				  downloadCount
+				}
+			  }
+			}
+		  }
+		},`)
+	}
+	queryBuilder.WriteString("}")
+
+	err := fetchGithub(queryBuilder.String(), &reposStruct)
+	if err != nil {
+		return nil, err
+	}
+
+	var toReturn = make([]GithubRepositoryReleases, len(reposStruct.Data))
+
+	var i = 0
+	for repo, releases := range reposStruct.Data {
+		var count = 0
+		var latest = ""
+		for _, rel := range releases.Releases.Nodes {
+			for _, asset := range rel.Assets.Nodes {
+				count += asset.Downloads
+			}
+
+			latest = rel.TagName
+		}
+
+		toReturn[i] = GithubRepositoryReleases{
+			Name:      repo,
+			Version:   latest,
+			Downloads: count,
+		}
+
+		i++
+	}
+
+	return &toReturn, nil
 }
 
 // GetUserInfo fetches the user info from the github graphql api

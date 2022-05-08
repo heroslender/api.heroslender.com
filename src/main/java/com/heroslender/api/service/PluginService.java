@@ -17,19 +17,13 @@ import java.util.TimerTask;
 
 @Service
 public class PluginService {
-    GitHub github;
+    private final GitHub github;
     private final PluginRepository pluginRepository;
 
     @Autowired
-    public PluginService(PluginRepository pluginRepository) {
+    public PluginService(PluginRepository pluginRepository, GitHub github) {
         this.pluginRepository = pluginRepository;
-
-        try {
-            this.github = GitHubBuilder.fromEnvironment().build();
-        } catch (IOException e) {
-            System.out.println("Failed to connect to GitHub");
-            throw new RuntimeException(e);
-        }
+        this.github = github;
 
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override

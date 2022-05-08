@@ -21,6 +21,12 @@ public class Plugin {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Column(name = "bstats_id")
+    private Integer bstatsId;
+
+    @Column(name = "panel_background")
+    private String panelBackground;
+
     @Column(name = "name")
     private String name;
 

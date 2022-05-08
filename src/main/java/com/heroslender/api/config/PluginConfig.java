@@ -16,13 +16,51 @@ public class PluginConfig {
             Plugin heroSpawners = Plugin
                     .builder()
                     .name("HeroSpawners")
+                    .bstatsId(2088)
+                    .panelBackground("background-image: url(/assets/images/herospawners_banner.png)")
                     .version("1.0.0")
-                    .downloadCount(312)
-                    .players(PluginMetricRecord.builder().current(12).record(32).build())
-                    .servers(PluginMetricRecord.builder().current(2).record(21).build())
+                    .downloadCount(0)
+                    .players(PluginMetricRecord.builder().current(0).record(0).build())
+                    .servers(PluginMetricRecord.builder().current(0).record(0).build())
+                    .build();
+
+            Plugin heroStackDrops = Plugin
+                    .builder()
+                    .name("HeroStackDrops")
+                    .bstatsId(5041)
+                    .panelBackground("background-image: url(https://github.com/heroslender/HeroStackDrops/raw/master/assets/preview.png); background-position: 90% -10%;")
+                    .version("1.0.0")
+                    .downloadCount(0)
+                    .players(PluginMetricRecord.builder().current(0).record(0).build())
+                    .servers(PluginMetricRecord.builder().current(0).record(0).build())
+                    .build();
+
+            Plugin heroMagnata = Plugin
+                    .builder()
+                    .name("HeroMagnata")
+                    .bstatsId(1621)
+                    .panelBackground("background-image: url(https://github.com/heroslender/HeroMagnata/raw/master/assets/preview_npc.png); background-position: -50% 50%; background-size: 100%;")
+                    .version("1.0.0")
+                    .downloadCount(0)
+                    .players(PluginMetricRecord.builder().current(0).record(0).build())
+                    .servers(PluginMetricRecord.builder().current(0).record(0).build())
+                    .build();
+
+            Plugin heroVender = Plugin
+                    .builder()
+                    .name("HeroVender")
+                    .bstatsId(3757)
+                    .panelBackground("background-image: url(/assets/images/herospawners_banner.png)")
+                    .version("1.0.0")
+                    .downloadCount(0)
+                    .players(PluginMetricRecord.builder().current(0).record(0).build())
+                    .servers(PluginMetricRecord.builder().current(0).record(0).build())
                     .build();
 
             pluginRepository.save(heroSpawners);
+            pluginRepository.save(heroStackDrops);
+            pluginRepository.save(heroMagnata);
+            pluginRepository.save(heroVender);
         };
     }
 }

@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface PluginRepository extends JpaRepository<Plugin, Long> {
     Optional<Plugin> findByName(String name);
+
+    Optional<Plugin> findByNameEqualsIgnoreCase(String name);
 }

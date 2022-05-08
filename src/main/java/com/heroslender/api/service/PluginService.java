@@ -25,7 +25,7 @@ public class PluginService {
         this.pluginRepository = pluginRepository;
 
         try {
-            this.github = new GitHubBuilder().withOAuthToken("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").build();
+            this.github = GitHubBuilder.fromEnvironment().build();
         } catch (IOException e) {
             System.out.println("Failed to connect to GitHub");
             throw new RuntimeException(e);
@@ -54,12 +54,9 @@ public class PluginService {
         List<Plugin> plugins = getPlugins();
 
         for (Plugin plugin : plugins) {
-            System.out.println("https://bstats.org/api/v1/plugins/" + plugin.getBstatsId() + "/charts/" + "servers" + "/data/?maxElements=" + (2 * 24 * 30 * 3));
+            System.out.println("Updating plugin " + plugin.getName());
             try {
-                int count = fetchDownloadCount(plugin.getName());
-
-                plugin.setDownloadCount(count);
-
+                updateFromGitHub(plugin);
             } catch (IOException e) {
                 System.out.println("Failed to update plugin " + plugin.getName() + ": " + e.getMessage());
             }
@@ -77,12 +74,13 @@ public class PluginService {
         }
     }
 
-    public int fetchDownloadCount(String name) throws IOException {
+    public void updateFromGitHub(Plugin plugin) throws IOException {
         if (github == null) {
-            return 0;
+            return;
         }
 
-        PagedIterable<GHRelease> releases = github.getRepository("Heroslender/" + name).listReleases();
+        GHRepository repository = github.getRepository("Heroslender/" + plugin.getName());
+        PagedIterable<GHRelease> releases = repository.listReleases();
         int count = 0;
         for (GHRelease release : releases) {
             PagedIterable<GHAsset> assets = release.listAssets();
@@ -93,7 +91,8 @@ public class PluginService {
             }
         }
 
-        return count;
+        plugin.setDownloadCount(count);
+        plugin.setVersion(repository.getLatestRelease().getTagName());
     }
 
     public PluginMetricRecord fetchBstatsData(int bstatsId, String metric) {

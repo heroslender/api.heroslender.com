@@ -1,8 +1,8 @@
 package com.heroslender.api.service;
 
+import com.heroslender.api.cache.GithubProfileCache;
 import com.heroslender.api.entity.GithubProfile;
 import com.heroslender.api.entity.GithubProfileRepo;
-import com.heroslender.api.repository.GithubProfileRepository;
 import lombok.Data;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
@@ -18,40 +18,43 @@ import java.util.*;
 @Service
 public class GithubProfileService {
     private final GitHub github;
-    private final GithubProfileRepository githubProfileRepository;
+    private final GithubProfileCache githubProfileCache;
 
     @Autowired
-    public GithubProfileService(GithubProfileRepository githubProfileRepository, GitHub github) {
-        this.githubProfileRepository = githubProfileRepository;
+    public GithubProfileService(GithubProfileCache githubProfileCache, GitHub github) {
+        this.githubProfileCache = githubProfileCache;
         this.github = github;
-
-//        System.out.println(getLanguageColor("Java"));
-
 
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                for (GithubProfile profile : githubProfileRepository.findAll()) {
-                    System.out.println("Updating profile: " + profile.getLogin());
-                    try {
-                        update(profile);
+                GithubProfile profile = githubProfileCache.getProfile();
 
-                        githubProfileRepository.save(profile);
-                    } catch (IOException e) {
-                        System.out.println("Error updating profile " + profile.getLogin() + ": " + e.getMessage());
-                    }
+                try {
+                    update(profile);
+
+                    githubProfileCache.setProfile(profile);
+                } catch (IOException e) {
+                    System.out.println("Error updating profile " + profile.getLogin() + ": " + e.getMessage());
                 }
             }
-        }, 1000L, 1000L * 60 * 15);
+        }, 1000L * 60 * 15, 1000L * 60 * 15);
     }
 
     public GithubProfile getFirst() {
-        GithubProfile profile = githubProfileRepository.findAll().iterator().next();
+        GithubProfile profile = githubProfileCache.getProfile();
         profile.getRepos().sort(Comparator.comparing(GithubProfileRepo::getStars).reversed());
         return profile;
     }
 
+    public void update() throws IOException {
+        GithubProfile profile = githubProfileCache.getProfile();
+        update(profile);
+    }
+
     private void update(GithubProfile githubProfile) throws IOException {
+        System.out.println("Updating profile: " + githubProfile.getLogin() + "...");
+
         GHUser user = github.getUser(githubProfile.getLogin());
         githubProfile.setDisplayname(user.getName());
         githubProfile.setPublic_repos(user.getPublicRepoCount());
@@ -60,14 +63,17 @@ public class GithubProfileService {
         githubProfile.setFollowers(user.getFollowersCount());
         githubProfile.setFollowing(user.getFollowingCount());
 
+        System.out.println("Updating stars...");
         int count = 0;
-        for (GHRepository repository : user.listStarredRepositories()) {
+        for (GHRepository ignored : user.listStarredRepositories()) {
             count++;
         }
 
         githubProfile.setStars(count);
 
+        System.out.println("Updating repos...");
         for (GithubProfileRepo repo : githubProfile.getRepos()) {
+            System.out.println("Updating repo: " + repo.getName() + "...");
             GHRepository repository = github.getRepository(repo.getFullName());
             repo.setName(repository.getOwnerName().equals(user.getLogin()) ? repository.getName() : repository.getFullName());
             repo.setDescription(repository.getDescription());

@@ -1,5 +1,6 @@
 package com.heroslender.api.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import javax.persistence.*;
@@ -22,6 +23,7 @@ public class GithubProfileRepo {
     private String name;
 
     @Column(name = "full_name")
+    @JsonProperty("full_name")
     private String fullName;
 
     @Column(name = "description")
@@ -31,13 +33,14 @@ public class GithubProfileRepo {
     private String language;
 
     @Column(name = "language_color")
+    @JsonProperty("language_color")
     private String languageColor = "#b07219";
 
     @Column(name = "url")
     private String url;
 
     @Column(name = "stars")
-    private int stars;
+    private int stars = 0;
 
     @Column(name = "forks")
     private Integer forks;

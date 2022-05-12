@@ -1,8 +1,8 @@
 package com.heroslender.api.service;
 
+import com.heroslender.api.cache.PluginCache;
 import com.heroslender.api.entity.Plugin;
 import com.heroslender.api.entity.PluginMetricRecord;
-import com.heroslender.api.repository.PluginRepository;
 import org.kohsuke.github.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -18,11 +18,11 @@ import java.util.TimerTask;
 @Service
 public class PluginService {
     private final GitHub github;
-    private final PluginRepository pluginRepository;
+    private final PluginCache pluginCache;
 
     @Autowired
-    public PluginService(PluginRepository pluginRepository, GitHub github) {
-        this.pluginRepository = pluginRepository;
+    public PluginService(PluginCache pluginCache, GitHub github) {
+        this.pluginCache = pluginCache;
         this.github = github;
 
         new Timer().scheduleAtFixedRate(new TimerTask() {
@@ -30,15 +30,15 @@ public class PluginService {
             public void run() {
                 updatePlugins();
             }
-        }, 1000L, 1000L * 60 * 15);
+        }, 1000L * 60 * 15, 1000L * 60 * 15);
     }
 
     public List<Plugin> getPlugins() {
-        return pluginRepository.findAll();
+        return pluginCache.findAll();
     }
 
     public Plugin getPlugin(String name) {
-        return pluginRepository
+        return pluginCache
                 .findByNameEqualsIgnoreCase(name)
                 .orElseThrow(() -> new IllegalStateException("Plugin not found"));
     }
@@ -64,7 +64,7 @@ public class PluginService {
                 plugin.setPlayers(players);
             }
 
-            pluginRepository.save(plugin);
+            pluginCache.save(plugin);
         }
     }
 

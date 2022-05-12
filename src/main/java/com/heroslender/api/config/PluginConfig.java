@@ -1,8 +1,9 @@
 package com.heroslender.api.config;
 
+import com.heroslender.api.cache.PluginCache;
 import com.heroslender.api.entity.Plugin;
 import com.heroslender.api.entity.PluginMetricRecord;
-import com.heroslender.api.repository.PluginRepository;
+import com.heroslender.api.service.PluginService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class PluginConfig {
 
     @Bean
-    CommandLineRunner runner(PluginRepository pluginRepository) {
+    CommandLineRunner pluginConfigRunner(PluginCache pluginCache, PluginService pluginService) {
         return args -> {
             Plugin heroSpawners = Plugin
                     .builder()
@@ -57,10 +58,12 @@ public class PluginConfig {
                     .servers(PluginMetricRecord.builder().current(0).record(0).build())
                     .build();
 
-            pluginRepository.save(heroSpawners);
-            pluginRepository.save(heroStackDrops);
-            pluginRepository.save(heroMagnata);
-            pluginRepository.save(heroVender);
+            pluginCache.save(heroSpawners);
+            pluginCache.save(heroStackDrops);
+            pluginCache.save(heroMagnata);
+            pluginCache.save(heroVender);
+
+            pluginService.updatePlugins();
         };
     }
 }

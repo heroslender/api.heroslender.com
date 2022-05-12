@@ -3,6 +3,7 @@ package com.heroslender.api.service;
 import com.heroslender.api.cache.PluginCache;
 import com.heroslender.api.entity.Plugin;
 import com.heroslender.api.entity.PluginMetricRecord;
+import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class PluginService {
@@ -45,27 +47,26 @@ public class PluginService {
 
     public void updatePlugins() {
         System.out.println("Updating plugins...");
-        List<Plugin> plugins = getPlugins();
+        for (Plugin plugin : getPlugins()) {
+            updatePlugin(plugin);
+        }
+    }
 
-        for (Plugin plugin : plugins) {
-            System.out.println("Updating plugin " + plugin.getName());
+    @SuppressWarnings("UnusedReturnValue")
+    public CompletableFuture<Void> updatePlugin(Plugin plugin) {
+        return CompletableFuture.runAsync(() -> {
+            System.out.println("Updating plugin " + plugin.getName() + "...");
             try {
                 updateFromGitHub(plugin);
             } catch (IOException e) {
                 System.out.println("Failed to update plugin " + plugin.getName() + ": " + e.getMessage());
             }
 
-            PluginMetricRecord servers = fetchBstatsData(plugin.getBstatsId(), "servers");
-            if (servers != null) {
-                plugin.setServers(servers);
-            }
-            PluginMetricRecord players = fetchBstatsData(plugin.getBstatsId(), "players");
-            if (players != null) {
-                plugin.setPlayers(players);
-            }
+            plugin.setServers(fetchBstatsData(plugin.getBstatsId(), "servers"));
+            plugin.setPlayers(fetchBstatsData(plugin.getBstatsId(), "players"));
 
-            pluginCache.save(plugin);
-        }
+            System.out.println("Updated plugin " + plugin.getName() + ".");
+        });
     }
 
     public void updateFromGitHub(Plugin plugin) throws IOException {
@@ -89,12 +90,13 @@ public class PluginService {
         plugin.setVersion(repository.getLatestRelease().getTagName());
     }
 
+    @NotNull
     public PluginMetricRecord fetchBstatsData(int bstatsId, String metric) {
         RestTemplate restTemplate = new RestTemplateBuilder().build();
         ResponseEntity<long[][]> metricList = restTemplate.getForEntity("https://bstats.org/api/v1/plugins/" + bstatsId + "/charts/" + metric + "/data/?maxElements=" + (2 * 24 * 30 * 3), long[][].class);
         long[][] data = metricList.getBody();
         if (data == null || data.length == 0) {
-            return null;
+            return new PluginMetricRecord(null, 0, 0);
         }
 
         int current = (int) data[data.length - 1][1];

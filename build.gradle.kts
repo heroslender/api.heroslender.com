@@ -27,6 +27,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.kohsuke:github-api:1.306")
+    implementation("org.jetbrains:annotations:23.0.0")
 
     runtimeOnly("com.h2database:h2")
 
@@ -34,6 +35,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
 
     testImplementation("org.springframework.boot:spring-boot-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.test {

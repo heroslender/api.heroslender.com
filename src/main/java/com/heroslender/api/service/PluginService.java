@@ -3,6 +3,7 @@ package com.heroslender.api.service;
 import com.heroslender.api.cache.PluginCache;
 import com.heroslender.api.entity.Plugin;
 import com.heroslender.api.entity.PluginMetricRecord;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 public class PluginService {
     private final GitHub github;
@@ -46,7 +48,7 @@ public class PluginService {
     }
 
     public void updatePlugins() {
-        System.out.println("Updating plugins...");
+        log.info("Updating plugins...");
         for (Plugin plugin : getPlugins()) {
             updatePlugin(plugin);
         }
@@ -55,17 +57,17 @@ public class PluginService {
     @SuppressWarnings("UnusedReturnValue")
     public CompletableFuture<Void> updatePlugin(Plugin plugin) {
         return CompletableFuture.runAsync(() -> {
-            System.out.println("Updating plugin " + plugin.getName() + "...");
+            log.info("Updating plugin {}...", plugin.getName());
             try {
                 updateFromGitHub(plugin);
             } catch (IOException e) {
-                System.out.println("Failed to update plugin " + plugin.getName() + ": " + e.getMessage());
+                log.info("Failed to update plugin {}: {}", plugin.getName(), e.getMessage());
             }
 
             plugin.setServers(fetchBstatsData(plugin.getBstatsId(), "servers"));
             plugin.setPlayers(fetchBstatsData(plugin.getBstatsId(), "players"));
 
-            System.out.println("Updated plugin " + plugin.getName() + ".");
+            log.info("Updated plugin {}.", plugin.getName());
         });
     }
 

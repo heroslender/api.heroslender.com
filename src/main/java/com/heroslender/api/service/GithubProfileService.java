@@ -4,6 +4,7 @@ import com.heroslender.api.cache.GithubProfileCache;
 import com.heroslender.api.entity.GithubProfile;
 import com.heroslender.api.entity.GithubProfileRepo;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
@@ -13,8 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
+@Slf4j
 @Service
 public class GithubProfileService {
     private final GitHub github;
@@ -35,7 +40,7 @@ public class GithubProfileService {
 
                     githubProfileCache.setProfile(profile);
                 } catch (IOException e) {
-                    System.out.println("Error updating profile " + profile.getLogin() + ": " + e.getMessage());
+                    log.info("Error updating profile {}: {}", profile.getLogin(), e.getMessage());
                 }
             }
         }, 1000L * 60 * 15, 1000L * 60 * 15);
@@ -53,7 +58,7 @@ public class GithubProfileService {
     }
 
     private void update(GithubProfile githubProfile) throws IOException {
-        System.out.println("Updating profile: " + githubProfile.getLogin() + "...");
+        log.info("Updating profile: {}...", githubProfile.getLogin());
 
         GHUser user = github.getUser(githubProfile.getLogin());
         githubProfile.setDisplayname(user.getName());
@@ -63,7 +68,7 @@ public class GithubProfileService {
         githubProfile.setFollowers(user.getFollowersCount());
         githubProfile.setFollowing(user.getFollowingCount());
 
-        System.out.println("Updating stars...");
+        log.info("Updating stars...");
         int count = 0;
         for (GHRepository ignored : user.listStarredRepositories()) {
             count++;
@@ -71,9 +76,9 @@ public class GithubProfileService {
 
         githubProfile.setStars(count);
 
-        System.out.println("Updating repos...");
+        log.info("Updating repos...");
         for (GithubProfileRepo repo : githubProfile.getRepos()) {
-            System.out.println("Updating repo: " + repo.getName() + "...");
+            log.info("Updating repo: {}...", repo.getFullName());
             GHRepository repository = github.getRepository(repo.getFullName());
             repo.setName(repository.getOwnerName().equals(user.getLogin()) ? repository.getName() : repository.getFullName());
             repo.setDescription(repository.getDescription());
@@ -91,7 +96,11 @@ public class GithubProfileService {
                 "https://raw.githubusercontent.com/ozh/github-colors/master/colors.json",
                 ColorsList.class
         );
-        System.out.println(Arrays.toString(colorsList.getColors().entrySet().toArray()));
+
+        if (colorsList == null) {
+            return "#000000";
+        }
+
         return colorsList.getColors().get(language);
     }
 

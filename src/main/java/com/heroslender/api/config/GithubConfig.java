@@ -17,7 +17,7 @@ public class GithubConfig {
         try {
             return GitHubBuilder.fromEnvironment().build();
         } catch (IOException e) {
-            System.out.println("Failed to connect to GitHub");
+            System.err.println("Failed to connect to GitHub");
         }
 
         return null;

@@ -34,12 +34,14 @@ public class GithubProfileRepo {
 
     @Column(name = "language_color")
     @JsonProperty("language_color")
+    @Builder.Default
     private String languageColor = "#b07219";
 
     @Column(name = "url")
     private String url;
 
     @Column(name = "stars")
+    @Builder.Default
     private int stars = 0;
 
     @Column(name = "forks")
